@@ -4,4 +4,4 @@
 set -e
 set -x
 
-$GOPATH/bin/chopclient &
+$GOPATH/bin/chopclient 2> $HOME/chopclient.log

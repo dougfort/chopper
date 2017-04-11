@@ -2,6 +2,8 @@ package httpserv
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -35,7 +37,25 @@ func Serve(
 
 // chopHandler 'chops' the URL to a smaller size
 func (s *server) chopHandler(w http.ResponseWriter, request *http.Request) {
+	var content map[string]string
+
 	log.Printf("chopHandler: %s: %s", request.Host, request.Method)
+
+	marshalled, err := ioutil.ReadAll(request.Body)
+	request.Body.Close()
+	if err != nil {
+		log.Printf("error: unable to read body: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if err := json.Unmarshal(marshalled, &content); err != nil {
+		log.Printf("error: unable to unmarshal body: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("debug: url = %s", content["url"])
 }
 
 // unchopHandler redirects to the original URL if possible
