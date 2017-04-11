@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -55,5 +56,22 @@ func testChop(url string) (int, string, error) {
 	if err != nil {
 		return 0, "", fmt.Errorf("request failed: %s", err)
 	}
-	return resp.StatusCode, "", nil
+
+	if resp.StatusCode != http.StatusOK {
+		return resp.StatusCode, "", nil
+	}
+
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return 0, "", fmt.Errorf("unable to read response body: %s", err)
+	}
+
+	var respMap map[string]string
+	err = json.Unmarshal(respBytes, &respMap)
+	if err != nil {
+		return 0, "", fmt.Errorf("unable to unmarshal response body: %s", err)
+	}
+
+	return resp.StatusCode, respMap["chopped"], nil
 }
